@@ -1,0 +1,9 @@
+# NodeJS
+node_modules/
+
+# Secure files
+credentials.json
+config.json
+
+# Misc
+data/

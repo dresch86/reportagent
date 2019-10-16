@@ -1,0 +1,9 @@
+{
+    "gDriveFolderId":"folder Id from URL",
+    "logFile":"/path/to/apache2/access.log",
+    "sieveSettings": 
+    {
+        "rootDomain":"mydomain.com",
+        "filterOnRootDomain":true
+    }
+}
