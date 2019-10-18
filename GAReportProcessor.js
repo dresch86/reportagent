@@ -1,5 +1,7 @@
 import Excel from 'exceljs';
 import moment from 'moment';
+import stream from 'stream';
+import DriveUploader from './DriveUploader'
 
 export default class GAReportProcessor {
     constructor(_author, _jsonLog) {
@@ -158,7 +160,7 @@ export default class GAReportProcessor {
             let iRSCount = this.jsonLog.referring_sites.data.length;
 
             for (let i=0; i<iRSCount; i++) {
-                if (sieveSettings.filterOnRootDomain) {
+                if (sieveSettings.filterInternalHits) {
                     if (this.jsonLog.referring_sites.data[i].data.indexOf(sieveSettings.rootDomain) == -1) {
                         shRefSitesReport.addRow(
                             {
@@ -237,7 +239,7 @@ export default class GAReportProcessor {
             };
 
             for (let i=0; i<iSDCount; i++) {
-                if (sieveSettings.filterOnRootDomain) {
+                if (sieveSettings.filterInternalHits) {
                     if (this.jsonLog.vhosts.data[i].data.indexOf(sieveSettings.rootDomain) > -1) {
                         shSubdomainReport.addRow(
                             {
@@ -337,16 +339,26 @@ export default class GAReportProcessor {
         }
     }
 
-    writeToFile(path) {
+    writeToLocalFile(path) {
         this.xlsxWorkbook.xlsx.writeFile(path)
         .then(() => console.log('Data compiled and written to file!'));
     }
 
-    writeToBuffer() {
-        return this.xlsxWorkbook.xlsx.writeBuffer();
-    }
-
-    getFilename(ext) {
-        return 'Log-' + moment(this.jsonLog.general.date_time, 'YYYY-MM-DD HH:mm:ss ZZ').format('MMDDYYYY-HHmmss') + '.' + ext;
+    writeToGoogleDrive(folderId, credentialsObj) {
+        let sFilename = 'Log-' + moment(this.jsonLog.general.date_time, 'YYYY-MM-DD HH:mm:ss ZZ').format('MMDDYYYY-HHmmss') + '.xlsx';
+        this.xlsxWorkbook.xlsx.writeBuffer()
+        .then((buffer) => {
+          let duReportHandler = new DriveUploader(credentialsObj.client_email, credentialsObj.private_key);
+          duReportHandler.authorizeJWT()
+          .then(() => {
+            let stBufferStream = stream.PassThrough();
+            stBufferStream.end(buffer);
+    
+            duReportHandler.uploadReport(sFilename, stBufferStream, folderId)
+            .then((file) => console.log('Uploaded File Id: ', file.id))
+            .catch(err => console.error(err));
+          })
+          .catch(err => console.error(err));
+        });
     }
 }

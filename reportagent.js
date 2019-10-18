@@ -1,37 +1,90 @@
 'use strict';
 
 import fs from 'fs-extra';
-import stream from 'stream';
-import DriveUploader from './DriveUploader'
+import spawn from 'await-spawn';
 import GAReportProcessor from './GAReportProcessor';
+
+var sAuthor = '';
+
+async function goaccessProcessor(goaCfg, jobObj) {
+  let aGoAccessParams = 
+  [ '--log-format', goaCfg.logFormat,
+    '--log-file', jobObj.site.accessLog, 
+    ('--output=' + jobObj.site.processedFile), 
+    '--addr=127.0.0.1'
+  ];
+
+  if (goaCfg.ignoreQueryString) {
+    aGoAccessParams.push('--no-query-string');
+  }
+
+  if (goaCfg.ignoreCrawlers) {
+    aGoAccessParams.push('--ignore-crawlers');
+  }
+
+  let i=0;
+
+  if (goaCfg.excludeIP.length > 0) {
+    for (i=0;i<goaCfg.excludeIP.length;i++) {
+      aGoAccessParams.push('--exclude-ip ' + goaCfg.excludeIP[i]);
+    }
+  }
+
+  if (goaCfg.excludePanel.length > 0) {
+    for (i=0;i<goaCfg.excludePanel.length;i++) {
+      aGoAccessParams.push('--ignore-panel= ' + goaCfg.excludePanel[i]);
+    }
+  }
+
+  if (jobObj.sieveSettings.filterInternalHits) {
+    aGoAccessParams.push('--hide-referer');
+    aGoAccessParams.push('*' + jobObj.domain);
+    aGoAccessParams.push('--ignore-referer=*' + jobObj.domain);
+  }
+
+  let blGoAccess = await spawn('goaccess', aGoAccessParams);
+
+  if (!(blGoAccess instanceof Error)) {
+    fs.readJson(jobObj.site.processedFile)
+    .then(logData => {
+      let rhGAReportHandler = new GAReportProcessor(sAuthor, logData);
+      rhGAReportHandler.addGeneralInfoSheet();
+      rhGAReportHandler.addSubdomainUsageSheet(jobObj.site.sieveSettings);
+      rhGAReportHandler.addReferringSites(jobObj.site.sieveSettings);
+      rhGAReportHandler.addVisitorsSheet();
+      rhGAReportHandler.addBrowsersReport();
+      return rhGAReportHandler.writeToBuffer(jobObj.driveDestId, jobObj.credentials);
+    });
+  }
+}
 
 fs.readJson('credentials.json')
 .then(credentialsObj => {
   fs.readJson('config.json')
   .then(configObj => {
-    fs.readJson(configObj.logFile)
-    .then(logData => {
-      let rhGAReportHandler = new GAReportProcessor(configObj.logAuthor, logData);
-      rhGAReportHandler.addGeneralInfoSheet();
-      rhGAReportHandler.addSubdomainUsageSheet(configObj.sieveSettings);
-      rhGAReportHandler.addReferringSites(configObj.sieveSettings);
-      rhGAReportHandler.addVisitorsSheet();
-      rhGAReportHandler.addBrowsersReport();
-      rhGAReportHandler.writeToBuffer()
-      .then((buffer) => {
-        let duReportHandler = new DriveUploader(credentialsObj.client_email, credentialsObj.private_key);
-        duReportHandler.authorizeJWT()
-        .then(() => {
-          let stBufferStream = stream.PassThrough();
-          stBufferStream.end(buffer);
+    let iNumSites = configObj.sites.length;
+    sAuthor = configObj.author;
 
-          duReportHandler.uploadReport(rhGAReportHandler.getFilename('xlsx'), stBufferStream, configObj.gDriveFolderId)
-          .then((file) => console.log('Uploaded File Id: ', file.id))
-          .catch(err => console.log(err));
-        })
-        .catch(err => console.log(err));
+    for (let i=0;i<iNumSites;i++) {
+      fs.watch(configObj.sites[i].accessLog, (eventType, filename) => {
+        if (eventType === 'change') {
+          if (filename) {
+            if (configObj.sites[i].plugin == 'goaccess') {
+              goaccessProcessor(configObj.plugins.goaccess,
+                {
+                  driveDestId: configObj.gDriveFolderId,
+                  credentials: credentialsObj,
+                  site: configObj.sites[i]
+                }).catch((err) => console.error(err));
+            } else {
+              //TODO Handle a raw unprocessed log by default?
+            }
+          }
+        } else if (eventType === 'error') {
+          console.error('An error occurred watching [' + filename + ']');
+        }
       });
-    });
+    }
   })
   .catch(err => console.error('CONFIG: ' + err));
 })

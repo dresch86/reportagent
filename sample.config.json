@@ -1,10 +1,28 @@
 {
-    "gDriveFolderId":"folder Id from URL",
-    "logFile":"/path/to/apache2/access.log",
-    "sieveSettings": 
+    "author":"Me",
+    "gDriveFolderId":"FolderIdFromURL",
+    "sites":
+    [
+        {
+            "plugin":"goaccess",
+            "domain":"mydomain.com",
+            "accessLog":"/var/log/webserver/mylog.access.log.1",
+            "processedFile":"/srv/logs/mydomain.com.json",
+            "sieveSettings":
+            {
+                "filterInternalHits":true
+            }
+        }
+    ],
+    "plugins":
     {
-        "rootDomain":"mydomain.com",
-        "filterOnRootDomain":true
-    },
-    "logAuthor":"MyName"
+        "goaccess":
+        {
+            "logFormat": "COMBINED",
+            "ignoreCrawlers": true,
+            "ignoreQueryString": true,
+            "excludeIP": ["127.0.0.1", "::1"],
+            "excludePanel": ["REQUESTS", "REQUESTS_STATIC", "NOT_FOUND", "HOSTS", "OS", "VISIT_TIMES", "STATUS_CODES", "REMOTE_USER", "GEO_LOCATION"]
+        }
+    }
 }
