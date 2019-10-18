@@ -1,14 +1,18 @@
 {
   "name": "reportagent",
   "version": "1.0.0",
-  "description": "An agent that grabs HTML reports, converts them to PDFs, and relocates them.",
+  "description": "A post-log processing agent that uploads a processed log to Google Drive.",
   "main": "reportagent.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "run": "node -r esm reportagent.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Daniel Resch",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dresch86/reportagent.git"
+  },
   "dependencies": {
     "await-spawn": "^3.0.0",
     "chokidar": "^3.2.2",
