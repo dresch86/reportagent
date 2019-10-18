@@ -26,20 +26,20 @@ async function goaccessProcessor(goaCfg, jobObj) {
 
   if (goaCfg.excludeIP.length > 0) {
     for (i=0;i<goaCfg.excludeIP.length;i++) {
-      aGoAccessParams.push('--exclude-ip ' + goaCfg.excludeIP[i]);
+      aGoAccessParams.push('--exclude-ip=' + goaCfg.excludeIP[i]);
     }
   }
 
   if (goaCfg.excludePanel.length > 0) {
     for (i=0;i<goaCfg.excludePanel.length;i++) {
-      aGoAccessParams.push('--ignore-panel= ' + goaCfg.excludePanel[i]);
+      aGoAccessParams.push('--ignore-panel=' + goaCfg.excludePanel[i]);
     }
   }
 
-  if (jobObj.sieveSettings.filterInternalHits) {
+  if (jobObj.site.sieveSettings.filterInternalHits) {
     aGoAccessParams.push('--hide-referer');
-    aGoAccessParams.push('*' + jobObj.domain);
-    aGoAccessParams.push('--ignore-referer=*' + jobObj.domain);
+    aGoAccessParams.push('*' + jobObj.site.domain);
+    aGoAccessParams.push('--ignore-referer=*' + jobObj.site.domain);
   }
 
   let blGoAccess = await spawn('goaccess', aGoAccessParams);
