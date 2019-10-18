@@ -32,6 +32,12 @@ async function goaccessProcessor(goaCfg, jobObj) {
     }
   }
 
+  if (goaCfg.includePanel.length > 0) {
+    for (i=0;i<goaCfg.excludePanel.length;i++) {
+      aGoAccessParams.push('--include-panel=' + goaCfg.includePanel[i]);
+    }
+  }
+
   if (goaCfg.excludePanel.length > 0) {
     for (i=0;i<goaCfg.excludePanel.length;i++) {
       aGoAccessParams.push('--ignore-panel=' + goaCfg.excludePanel[i]);
@@ -63,7 +69,9 @@ async function goaccessProcessor(goaCfg, jobObj) {
         rhGAReportHandler.addReferringSites(jobObj.site.sieveSettings);
         rhGAReportHandler.addVisitorsSheet();
         rhGAReportHandler.addBrowsersReport();
-        //rhGAReportHandler.writeToGoogleDrive(jobObj.driveDestId, jobObj.credentials);
+
+        console.log('Uploading to Google Drive [' + moment().format() + ']...');
+        rhGAReportHandler.writeToGoogleDrive(jobObj.driveDestId, jobObj.credentials);
         return true;
       }).catch(err => {
         console.error(err);

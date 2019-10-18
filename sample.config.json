@@ -22,6 +22,7 @@
             "ignoreCrawlers": true,
             "ignoreQueryString": true,
             "excludeIP": ["127.0.0.1", "::1"],
+            "includePanel": [],
             "excludePanel": ["REQUESTS", "REQUESTS_STATIC", "NOT_FOUND", "HOSTS", "OS", "VISIT_TIMES", "STATUS_CODES", "REMOTE_USER", "GEO_LOCATION"]
         }
     }

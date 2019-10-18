@@ -1,0 +1,11 @@
+[Unit]
+Description=Watches log files post-rotation for additional processing and uploading to Google Drive
+Requires=network.target network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/reportagent
+ExecStart=/usr/bin/node -r esm -r reportagent.js
+
+[Install]
+WantedBy=multi-user.target
