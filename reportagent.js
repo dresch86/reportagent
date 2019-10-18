@@ -1,6 +1,8 @@
 'use strict';
 
 import fs from 'fs-extra';
+import moment from 'moment';
+import chokidar from 'chokidar';
 import spawn from 'await-spawn';
 import GAReportProcessor from './GAReportProcessor';
 
@@ -42,20 +44,36 @@ async function goaccessProcessor(goaCfg, jobObj) {
     aGoAccessParams.push('--ignore-referer=*' + jobObj.site.domain);
   }
 
-  let blGoAccess = await spawn('goaccess', aGoAccessParams);
+  let blGoAccess = await spawn('goaccess', aGoAccessParams, { stdio: ['ignore', 'pipe', 'pipe'] })
+  .then(output => 
+    {
+      let sResult = output.toString().trim();
 
-  if (!(blGoAccess instanceof Error)) {
-    fs.readJson(jobObj.site.processedFile)
-    .then(logData => {
-      let rhGAReportHandler = new GAReportProcessor(sAuthor, logData);
-      rhGAReportHandler.addGeneralInfoSheet();
-      rhGAReportHandler.addSubdomainUsageSheet(jobObj.site.sieveSettings);
-      rhGAReportHandler.addReferringSites(jobObj.site.sieveSettings);
-      rhGAReportHandler.addVisitorsSheet();
-      rhGAReportHandler.addBrowsersReport();
-      return rhGAReportHandler.writeToBuffer(jobObj.driveDestId, jobObj.credentials);
-    });
-  }
+      if (sResult.length > 0) {
+        console.log("GoAccess Result: \r\n" + sResult);
+      }
+
+      console.log('Compiling log [' + moment().format() + ']...');
+
+      fs.readJson(jobObj.site.processedFile)
+      .then(logData => {
+        let rhGAReportHandler = new GAReportProcessor(sAuthor, logData);
+        rhGAReportHandler.addGeneralInfoSheet();
+        rhGAReportHandler.addSubdomainUsageSheet(jobObj.site.sieveSettings);
+        rhGAReportHandler.addReferringSites(jobObj.site.sieveSettings);
+        rhGAReportHandler.addVisitorsSheet();
+        rhGAReportHandler.addBrowsersReport();
+        //rhGAReportHandler.writeToGoogleDrive(jobObj.driveDestId, jobObj.credentials);
+        return true;
+      }).catch(err => {
+        console.error(err);
+        return false;
+      });
+    }).catch(err => 
+      {
+        console.error(err.stderr.toString());
+        return false;
+      });
 }
 
 fs.readJson('credentials.json')
@@ -66,23 +84,23 @@ fs.readJson('credentials.json')
     sAuthor = configObj.author;
 
     for (let i=0;i<iNumSites;i++) {
-      fs.watch(configObj.sites[i].accessLog, (eventType, filename) => {
-        if (eventType === 'change') {
-          if (filename) {
-            if (configObj.sites[i].plugin == 'goaccess') {
-              goaccessProcessor(configObj.plugins.goaccess,
-                {
-                  driveDestId: configObj.gDriveFolderId,
-                  credentials: credentialsObj,
-                  site: configObj.sites[i]
-                }).catch((err) => console.error(err));
-            } else {
-              //TODO Handle a raw unprocessed log by default?
-            }
-          }
-        } else if (eventType === 'error') {
-          console.error('An error occurred watching [' + filename + ']');
+      chokidar.watch(configObj.sites[i].accessLog)
+      .on('change', path => 
+      {
+        if (configObj.sites[i].plugin == 'goaccess') {
+          goaccessProcessor(configObj.plugins.goaccess,
+            {
+              driveDestId: configObj.gDriveFolderId,
+              credentials: credentialsObj,
+              site: configObj.sites[i]
+            }).catch(err => console.error(err.toString()));
+        } else {
+          //TODO Handle a raw unprocessed log by default?
         }
+      })
+      .on('error', error => 
+      {
+        console.error('Watcher error: ' + error);
       });
     }
   })
