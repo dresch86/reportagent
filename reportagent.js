@@ -10,7 +10,8 @@ var sAuthor = '';
 
 async function goaccessProcessor(goaCfg, jobObj) {
   let aGoAccessParams = 
-  [ '--log-format', goaCfg.logFormat,
+  [ '--no-global-config',
+    '--log-format', goaCfg.logFormat,
     '--log-file', jobObj.site.accessLog, 
     ('--output=' + jobObj.site.processedFile), 
     '--addr=127.0.0.1'
