@@ -345,7 +345,7 @@ export default class GAReportProcessor {
     }
 
     writeToGoogleDrive(folderId, credentialsObj) {
-        let sFilename = 'Log-' + moment(this.jsonLog.general.date_time, 'YYYY-MM-DD HH:mm:ss ZZ').format('MMDDYYYY-HHmmss') + '.xlsx';
+        let sFilename = 'LOG-' + moment(this.jsonLog.general.start_date, 'DD/MMM/YYYY').format('MMDDYYYY') + '-' + moment(this.jsonLog.general.end_date, 'DD/MMM/YYYY').format('MMDDYYYY') + '.xlsx';
         this.xlsxWorkbook.xlsx.writeBuffer()
         .then((buffer) => {
           let duReportHandler = new DriveUploader(credentialsObj.client_email, credentialsObj.private_key);
