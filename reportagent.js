@@ -65,8 +65,8 @@ async function goaccessProcessor(goaCfg, jobObj) {
       .then(logData => {
         let rhGAReportHandler = new GAReportProcessor(sAuthor, logData);
         rhGAReportHandler.addGeneralInfoSheet();
-        rhGAReportHandler.addSubdomainUsageSheet(jobObj.site.sieveSettings);
-        rhGAReportHandler.addReferringSites(jobObj.site.sieveSettings);
+        rhGAReportHandler.addSubdomainUsageSheet(jobObj.site.domain, jobObj.site.sieveSettings);
+        rhGAReportHandler.addReferringSites(jobObj.site.domain, jobObj.site.sieveSettings);
         rhGAReportHandler.addVisitorsSheet();
         rhGAReportHandler.addBrowsersReport();
 

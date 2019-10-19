@@ -133,7 +133,7 @@ export default class GAReportProcessor {
         }
     }
 
-    addReferringSites(sieveSettings) {
+    addReferringSites(rootDomain, sieveSettings) {
         if (this.jsonLog.hasOwnProperty('referring_sites')) {
             let shRefSitesReport = this.xlsxWorkbook.addWorksheet('Referring Sites');
             shRefSitesReport.state = 'visible';
@@ -161,7 +161,7 @@ export default class GAReportProcessor {
 
             for (let i=0; i<iRSCount; i++) {
                 if (sieveSettings.filterInternalHits) {
-                    if (this.jsonLog.referring_sites.data[i].data.indexOf(sieveSettings.rootDomain) == -1) {
+                    if (this.jsonLog.referring_sites.data[i].data.indexOf(rootDomain) == -1) {
                         shRefSitesReport.addRow(
                             {
                                 subdomain: this.jsonLog.referring_sites.data[i].data, 
@@ -193,7 +193,7 @@ export default class GAReportProcessor {
         }  
     }
 
-    addSubdomainUsageSheet(sieveSettings) {
+    addSubdomainUsageSheet(rootDomain, sieveSettings) {
         if (this.jsonLog.hasOwnProperty('vhosts')) {
             let shSubdomainReport = this.xlsxWorkbook.addWorksheet('Sub-Domains');
             shSubdomainReport.state = 'visible';
@@ -240,7 +240,7 @@ export default class GAReportProcessor {
 
             for (let i=0; i<iSDCount; i++) {
                 if (sieveSettings.filterInternalHits) {
-                    if (this.jsonLog.vhosts.data[i].data.indexOf(sieveSettings.rootDomain) > -1) {
+                    if (this.jsonLog.vhosts.data[i].data.indexOf(rootDomain) > -1) {
                         shSubdomainReport.addRow(
                             {
                                 subdomain: this.jsonLog.vhosts.data[i].data, 
@@ -355,7 +355,7 @@ export default class GAReportProcessor {
             stBufferStream.end(buffer);
     
             duReportHandler.uploadReport(sFilename, stBufferStream, folderId)
-            .then((file) => console.log('Uploaded File Id: ', file.id))
+            .then((file) => console.log('Uploaded file [' + file.id + ']...'))
             .catch(err => console.error(err));
           })
           .catch(err => console.error(err));

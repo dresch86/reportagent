@@ -4,6 +4,7 @@ Requires=network.target network-online.target
 
 [Service]
 Type=simple
+Environment=HOME=/
 WorkingDirectory=/opt/reportagent
 ExecStart=/usr/bin/node -r esm reportagent.js
 

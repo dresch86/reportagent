@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 
-export default class ReportAgent {
+export default class DriveUploader {
     constructor(email, privKey) {
       this.jwtClient = new google.auth.JWT(
         email,
