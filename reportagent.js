@@ -34,7 +34,7 @@ async function goaccessProcessor(goaCfg, jobObj) {
 
   if (goaCfg.includePanel.length > 0) {
     for (i=0;i<goaCfg.excludePanel.length;i++) {
-      aGoAccessParams.push('--include-panel=' + goaCfg.includePanel[i]);
+      aGoAccessParams.push('--enable-panel=' + goaCfg.includePanel[i]);
     }
   }
 
